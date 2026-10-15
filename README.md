@@ -64,6 +64,9 @@ Web プロジェクトの Prettier / ESLint はプロジェクト側の devDepen
 | ESLint の修正 | `:LspEslintFixAll` または既存の code action |
 | Git 差分の部分表示 / index と比較 | `<leader>gd` / `gl`（新規追加） |
 | Copilot の切り替え | `<leader>lt` |
+| FIFO inbox を開く | `:VimboxOpen` |
+
+[Vimbox](https://github.com/runharu0662/vimbox)は思いつきを順番に処理するinboxです。`:VimboxOpen`で入力欄を開き、Enterで追加、Tabで一覧へ移動します。一覧の`d`で先頭の項目を処理済みにします。データは`stdpath("data")/vimbox_queue.json`へ保存されます。
 
 コード保存時は formatter を一つ選んで同期整形します。Go では goimports があれば import 整理も行います。
 ESLint の fix-all は保存時に強制しません。
