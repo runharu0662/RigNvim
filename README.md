@@ -1,4 +1,4 @@
-# web: Go・Web・Cloud / IaC・日本語執筆用 Neovim
+# RigNvim: Go・Web・Cloud / IaC・日本語執筆用 Neovim
 
 `web` は `simple` の日本語・Markdown 設定を基に、開発機能を追加し、重複する連携とUIを整理した構成です。
 `full` は従来の全部入り構成、`cpp` は競技プログラミング構成です。
@@ -64,7 +64,7 @@ Web プロジェクトの Prettier / ESLint はプロジェクト側の devDepen
 | ESLint の修正 | `:LspEslintFixAll` または既存の code action |
 | Git 差分の部分表示 / index と比較 | `<leader>gd` / `gl`（新規追加） |
 | Copilot の切り替え | `<leader>lt` |
-| FIFO inbox を開く | `:VimboxOpen` |
+| FIFO inbox を開く | `<leader>i`（`:VimboxOpen`） |
 
 [Vimbox](https://github.com/runharu0662/vimbox)は思いつきを順番に処理するinboxです。`:VimboxOpen`で入力欄を開き、Enterで追加、Tabで一覧へ移動します。一覧の`d`で先頭の項目を処理済みにします。データは`stdpath("data")/vimbox_queue.json`へ保存されます。
 
@@ -128,7 +128,7 @@ XDG_DATA_HOME=/tmp/nvim-web-test/data \
 XDG_STATE_HOME=/tmp/nvim-web-test/state \
 XDG_CACHE_HOME=/tmp/nvim-web-test/cache \
 NVIM_LOG_FILE=/tmp/nvim-web-test.log \
-NVIM_TEST_PLUGINS="$HOME/.local/share/nvim-alt/lazy" \
+NVIM_TEST_PLUGINS="$HOME/.local/share/RigNvim/lazy" \
 nvim --headless --noplugin -u NONE -i NONE \
   '+lua local ok, err = pcall(dofile, "tests/development.lua"); if not ok then print(err); vim.cmd("cquit 1") end' +qa
 ```

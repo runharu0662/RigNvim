@@ -1,4 +1,4 @@
--- ~/.config/nvim-alt/lua/plugins/ai/copilot.lua
+-- ~/.config/RigNvim/lua/plugins/ai/copilot.lua
 return {
 	"zbirenbaum/copilot.lua",
 	cmd = "Copilot",

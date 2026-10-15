@@ -16,8 +16,8 @@ sudo apt update
 sudo apt install -y neovim
 
 # Set Neovim to use alternate config
-echo 'export NVIM_APPNAME=nvim-alt' >> ~/.bashrc
-export NVIM_APPNAME=nvim-alt
+echo 'export NVIM_APPNAME=RigNvim' >> ~/.bashrc
+export NVIM_APPNAME=RigNvim
 
 echo "[4/5] Japanese input prerequisites..."
 echo "Install Deno separately. SKK-JISYO.L is bundled with this configuration."
