@@ -2,7 +2,8 @@
 local icons = require("user.icons")
 
 vim.diagnostic.config({
-	virtual_text = { spacing = 2, source = "if_many" },
+	-- Show messages below the current line without repeating them at the line end.
+	virtual_text = false,
 	virtual_lines = { current_line = true },
 	underline = true,
 	severity_sort = true,

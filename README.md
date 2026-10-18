@@ -29,7 +29,7 @@ build / test / terraform plan・apply / AWS CLI / Docker / kubectl は WezTerm +
 | 設定用 Lua | lua_ls | StyLua、未導入なら対応する LSP |
 
 LSP はプロジェクト内の `node_modules/.bin` → Mason / PATH の実行ファイルを探します。
-LSP は必要なものだけ `:Mason` または `:LspInstall` で導入します。起動時・ファイルを開いたときの自動インストールは行いません。導入完了後はファイルを開き直してください。
+設定済みの LSP は `ensure_installed` に登録し、ファイルを開いて Mason 連携が読み込まれると未導入分を自動インストールします。導入完了後はファイルを開き直してください。
 LSP の起動はこの構成で管理するため、Mason 側の `automatic_enable` は無効です。
 Prettier はプロジェクトの実行ファイルと設定を優先します。
 ESLint はプロジェクトの ESLint 設定に従って診断・コードアクションを提供し、整形役にはしません。
@@ -43,12 +43,12 @@ Rust は Rust toolchain と rustfmt が必要です。C/C++ はプロジェク�
 
 構文・型・lint の診断は LSP が担当します。Treesitter はハイライト担当で、サーバー未導入では診断は出ません。
 `:LanguageStatus`（`<leader>ci`）で現在の言語に対応するサーバーの `missing` / `installed, not attached` / `attached` を確認できます。
-手動導入の進捗は `:Mason` で確認できます。導入完了後にファイルを開き直してください。失敗時は表示された `:LspInstall` で再試行できます。
+自動導入の進捗は `:Mason` で確認できます。導入完了後にファイルを開き直してください。失敗時は表示された `:LspInstall` で再試行できます。
 LSP 子プロセスには英語のロケールを渡し、TypeScript の locale も `en` を指定しています。各ツールやルール独自のメッセージは翻訳しません。
 
 - エラー・警告を重要度順に表示し、下線とアイコンで強調します。
 - 診断表示は挿入モードを抜けたときに更新します（保存不要）。
-- カーソル行の診断は行の下に全文表示します。`<leader>ud` で切り替えます。
+- カーソル行の診断は行の下に全文表示し、行末への重複表示は無効にしています。`<leader>ud` で切り替えます。
 - `<leader>cd` で診断元付きの詳細ウィンドウを開きます。
 - `<leader>fd` で受信済みのワークスペース診断を検索、`<leader>cl` で現在のバッファの診断一覧を開きます。
 - 標準の `]d` / `[d` で次／前の診断に移動できます。
@@ -63,13 +63,7 @@ Neovim の組み込み LSP・snippet API を使います。アプリの実行・
 Docker 内の依存や toolchain はホストの LSP から自動では参照されません。Go はプロジェクトの `go.mod` / `go.work` に従ってホストにもモジュール・ビルドキャッシュを作る場合があります。ホストと Docker の Go バージョンはプロジェクトに合わせて管理してください。Brewfile はバージョン固定ではありません。
 formatter は必要に応じて `:Mason` から導入してください。
 
-`lua/config/languages.lua` は対応言語の一覧で、自動導入リストではありません。まず Go 用の LSP だけを導入する場合：
-
-```vim
-:LspInstall gopls
-```
-
-ほかの LSP は必要になった時点で `:LspInstall pyright` や `:LspInstall ts_ls` などで追加します。Go・Node.js の導入だけでは Rust などの toolchain は揃いません。
+`lua/config/languages.lua` の `servers` を自動導入リストとして使います。`gopls`、Pyright、Ruff、ESLint、tflint など、設定済みの言語サーバーをまとめて導入します。失敗した場合は `:Mason` で原因を確認し、`:LspInstall gopls` などで再試行できます。Go・Node.js の導入だけでは Rust などの toolchain は揃いません。
 
 formatter / lint は `:Mason` で `goimports`、`prettier`、`shfmt`、`stylua`、`tflint` を選べます。
 `gofmt` は Go、`terraform` は Terraform CLI の導入で提供されます。

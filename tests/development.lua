@@ -38,7 +38,10 @@ vim.fn["skkeleton#config"], vim.fn["skkeleton#register_keymap"] = original_confi
 local tools = require("config.development")
 local mason_opts = dofile("lua/plugins/lsp/mason-nvim.lua")[2].opts()
 assert(mason_opts.automatic_enable == false)
-assert(#mason_opts.ensure_installed == 0, "Do not install language servers automatically")
+assert(#mason_opts.ensure_installed == vim.tbl_count(tools.servers))
+for name in pairs(tools.servers) do
+	assert(vim.list_contains(mason_opts.ensure_installed, name), "Missing automatic installation: " .. name)
+end
 for name in pairs(tools.servers) do
 	assert(vim.lsp.config[name], name)
 end
