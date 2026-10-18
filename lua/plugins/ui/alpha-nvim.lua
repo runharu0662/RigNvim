@@ -22,6 +22,11 @@ return {
 			dashboard.button("g", " " .. " Find text", "<cmd> Telescope live_grep <cr>"),
 			dashboard.button("l", "󰒲 " .. " Lazy", "<cmd> Lazy <cr>"),
 			dashboard.button("h", " " .. " Check health", "<cmd> checkhealth <cr>"),
+			dashboard.button(
+				"s",
+				"  Repository ↗",
+				"<cmd>lua vim.ui.open('https://github.com/runharu0662/RigNvim')<CR>"
+			),
 			dashboard.button("q", " " .. " Quit", "<cmd> qa <cr>"),
 		}
 		dashboard.section.header.val = require("ascii").art.text.neovim.sharp
