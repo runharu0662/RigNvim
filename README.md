@@ -1,4 +1,4 @@
-# RigNvim: Go・Web・Cloud / IaC・日本語執筆用 Neovim
+# RigNvim: Go・Python・Rust・C/C++・Web・Cloud / IaC・日本語執筆用 Neovim
 
 `web` は `simple` の日本語・Markdown 設定を基に、開発機能を追加し、重複する連携とUIを整理した構成です。
 `full` は従来の全部入り構成、`cpp` は競技プログラミング構成です。
@@ -11,6 +11,9 @@ build / test / terraform plan・apply / AWS CLI / Docker / kubectl は WezTerm +
 
 | 対象 | LSP / diagnostics | 整形 |
 |---|---|---|
+| Python | Pyright（型チェック basic）、Ruff（構文・lint） | Ruff LSP |
+| Rust | rust-analyzer | rust-analyzer（rustfmt が必要） |
+| C / C++ | clangd | clangd（clang-format） |
 | Go / go.mod / go.sum / go.work | gopls | Go は goimports → gofmt → gopls の優先順、mod / sum は対応する LSP 機能のみ |
 | TypeScript / JavaScript / TSX / JSX | ts_ls、ESLint LSP | Prettier、未導入なら対応する LSP |
 | HTML / CSS | html / cssls | Prettier、未導入なら対応する LSP |
@@ -24,22 +27,42 @@ build / test / terraform plan・apply / AWS CLI / Docker / kubectl は WezTerm +
 | 設定用 Lua | lua_ls | StyLua、未導入なら対応する LSP |
 
 LSP はプロジェクト内の `node_modules/.bin` → Mason / PATH の実行ファイルを探します。
-未導入のサーバーは起動せず、ファイルを開くだけではツールをインストールしません。
+ファイルを開くと Mason が対応言語の未導入 LSP を自動インストールします。初回の導入完了後はファイルを開き直してください。
+LSP の起動はこの構成で管理するため、Mason 側の `automatic_enable` は無効です。
 Prettier はプロジェクトの実行ファイルと設定を優先します。
 ESLint はプロジェクトの ESLint 設定に従って診断・コードアクションを提供し、整形役にはしません。
 `eslint_d` や none-ls の ESLint ソースは重ねて登録していません。
+
+対応言語のサーバー・整形ツールの優先順・Treesitter parser は `lua/config/languages.lua` にまとめています。
+Python の仮想環境は有効化してから Neovim を起動するか、プロジェクトの Pyright 設定で指定してください。
+Rust は Rust toolchain と rustfmt が必要です。C/C++ はプロジェクトの `compile_commands.json` があると include やコンパイルオプションを正しく解決できます。
+
+## 診断の表示
+
+構文・型・lint の診断は LSP が担当します。Treesitter はハイライト担当で、サーバー未導入では診断は出ません。
+`:LanguageStatus`（`<leader>ci`）で現在の言語に対応するサーバーの `missing` / `installed, not attached` / `attached` を確認できます。
+自動導入の進捗は `:Mason` で確認できます。導入完了後にファイルを開き直してください。失敗時は表示された `:LspInstall` で再試行できます。
+LSP 子プロセスには英語のロケールを渡し、TypeScript の locale も `en` を指定しています。各ツールやルール独自のメッセージは翻訳しません。
+
+- エラー・警告を重要度順に表示し、下線とアイコンで強調します。
+- 診断表示は挿入モードを抜けたときに更新します（保存不要）。
+- カーソル行の診断は行の下に全文表示します。`<leader>ud` で切り替えます。
+- `<leader>cd` で診断元付きの詳細ウィンドウを開きます。
+- `<leader>fd` で受信済みのワークスペース診断を検索、`<leader>cl` で現在のバッファの診断一覧を開きます。
+- 標準の `]d` / `[d` で次／前の診断に移動できます。
 
 ## 開発ツールの導入
 
 Treesitter は `main` の新 API を使うため、Neovim 0.12 以降と tree-sitter CLI 0.26.1 以降が必要です。macOS では dotfiles の Brewfile から導入します。初回起動時にパーサーを非同期で取得し、完了後にファイルを開き直すとハイライトとインデントが有効になります。
 
-Neovim 0.11 以降の LSP・組み込み snippet API を使います。Node 系 LSP / Prettier / ESLint には Node.js、Go の開発には Go が必要です。
-必要なものだけ `:Mason` または環境のパッケージマネージャーで導入してください。
+Neovim 0.11 以降の LSP・組み込み snippet API を使います。実行・ビルド環境は Docker 側で管理し、この設定では導入しません。
+ホストで動く LSP の起動・導入依存（Node.js など）は別途必要です。Docker 内の依存や toolchain はホストの LSP から自動では参照されません。
+formatter は必要に応じて `:Mason` から導入してください。
 
-LSP は次のコマンドで必要な分を導入できます。
+LSP は `lua/config/languages.lua` の一覧から自動導入します。手動で再試行する場合は次のコマンドを使えます。
 
 ```vim
-:LspInstall gopls ts_ls eslint html cssls jsonls yamlls terraformls dockerls bashls lua_ls
+:LspInstall pyright ruff rust_analyzer clangd gopls ts_ls eslint html cssls jsonls yamlls terraformls dockerls bashls lua_ls
 ```
 
 formatter / lint は `:Mason` で `goimports`、`prettier`、`shfmt`、`stylua`、`tflint` を選べます。

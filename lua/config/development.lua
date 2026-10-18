@@ -1,19 +1,6 @@
 local M = {}
 
-M.servers = {
-	gopls = { command = "gopls" },
-	ts_ls = { command = "typescript-language-server", args = { "--stdio" } },
-	eslint = { command = "vscode-eslint-language-server", args = { "--stdio" } },
-	html = { command = "vscode-html-language-server", args = { "--stdio" } },
-	cssls = { command = "vscode-css-language-server", args = { "--stdio" } },
-	jsonls = { command = "vscode-json-language-server", args = { "--stdio" } },
-	yamlls = { command = "yaml-language-server", args = { "--stdio" } },
-	terraformls = { command = "terraform-ls", args = { "serve" } },
-	tflint = { command = "tflint", args = { "--langserver" } },
-	dockerls = { command = "docker-langserver", args = { "--stdio" } },
-	bashls = { command = "bash-language-server", args = { "start" } },
-	lua_ls = { command = "lua-language-server" },
-}
+M.servers = require("config.languages").servers
 
 -- Prefer the project's Node tools, then Mason / the shell PATH. Never install on open.
 function M.executable(command, path)
@@ -37,11 +24,43 @@ function M.executable(command, path)
 	end
 end
 
+-- Include missing tools: a configured server alone cannot produce diagnostics.
+function M.language_status()
+	local bufnr = vim.api.nvim_get_current_buf()
+	local ft = vim.bo[bufnr].filetype
+	local path = vim.api.nvim_buf_get_name(bufnr)
+	local lines = { "Language: " .. ft, "", "Language servers:" }
+	local names = vim.tbl_keys(M.servers)
+	table.sort(names)
+	local count = 0
+	for _, name in ipairs(names) do
+		local config = vim.lsp.config[name]
+		if config and vim.list_contains(config.filetypes or {}, ft) then
+			count = count + 1
+			local command = M.executable(M.servers[name].command, path ~= "" and path or nil)
+			local active = #vim.lsp.get_clients({ bufnr = bufnr, name = name }) > 0
+			table.insert(lines, name .. ": " .. (active and "attached" or command and "installed, not attached" or "missing") )
+			table.insert(lines, "  " .. (command or "Install with :LspInstall " .. name))
+		end
+	end
+	if count == 0 then
+		table.insert(lines, "No language server configured (highlighting only).")
+	end
+	table.insert(lines, "")
+	table.insert(lines, "Installed servers may need a project root or project configuration.")
+	vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO, { title = "Language status" })
+end
+
 function M.setup_lsp()
+	vim.api.nvim_create_user_command("LanguageStatus", M.language_status, { desc = "Show language server availability", force = true })
 	vim.lsp.config("*", { capabilities = require("cmp_nvim_lsp").default_capabilities() })
 	vim.lsp.config("gopls", {
 		filetypes = { "go", "gomod", "gosum", "gowork", "gotmpl" },
 		settings = { gopls = { staticcheck = true } },
+	})
+	vim.lsp.config("ts_ls", { init_options = { locale = "en" } })
+	vim.lsp.config("pyright", {
+		settings = { python = { analysis = { typeCheckingMode = "basic" } } },
 	})
 	vim.lsp.config("eslint", { settings = { format = false } })
 	vim.lsp.config("lua_ls", {
@@ -80,7 +99,10 @@ function M.setup_lsp()
 		vim.lsp.config(name, {
 			cmd = function(dispatchers, config)
 				local command = assert(M.executable(spec.command, config.root_dir), spec.command .. " is unavailable")
-				return vim.lsp.rpc.start(vim.list_extend({ command }, spec.args or {}), dispatchers)
+				return vim.lsp.rpc.start(vim.list_extend({ command }, spec.args or {}), dispatchers, {
+					cwd = config.root_dir,
+					env = { LANG = "en_US.UTF-8", LC_ALL = "en_US.UTF-8", LANGUAGE = "en" },
+				})
 			end,
 			root_dir = function(bufnr, on_dir)
 				local path = vim.api.nvim_buf_get_name(bufnr)
@@ -101,24 +123,7 @@ function M.setup_lsp()
 	end
 end
 
-local formatters = {
-	go = { "goimports", "gofmt" },
-	terraform = { "terraform" },
-	["terraform-vars"] = { "terraform" },
-	javascript = { "prettier" },
-	javascriptreact = { "prettier" },
-	typescript = { "prettier" },
-	typescriptreact = { "prettier" },
-	html = { "prettier" },
-	css = { "prettier" },
-	scss = { "prettier" },
-	json = { "prettier" },
-	jsonc = { "prettier" },
-	yaml = { "prettier" },
-	markdown = { "prettier" },
-	sh = { "shfmt" },
-	lua = { "stylua" },
-}
+local formatters = require("config.languages").formatters
 
 function M.format(opts)
 	opts = opts or {}

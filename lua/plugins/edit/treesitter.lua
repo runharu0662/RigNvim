@@ -10,29 +10,7 @@ return {
 		vim.filetype.add({ extension = { mdx = "mdx" } })
 		vim.treesitter.language.register("markdown", "mdx")
 
-		local languages = {
-			"lua",
-			"vim",
-			"vimdoc",
-			"query",
-			"markdown",
-			"markdown_inline",
-			"go",
-			"gomod",
-			"gosum",
-			"gowork",
-			"javascript",
-			"typescript",
-			"tsx",
-			"html",
-			"css",
-			"json",
-			"hcl",
-			"terraform",
-			"yaml",
-			"dockerfile",
-			"bash",
-		}
+		local languages = require("config.languages").parsers
 		treesitter.install(languages)
 
 		vim.api.nvim_create_autocmd("FileType", {

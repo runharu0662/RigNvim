@@ -36,8 +36,12 @@ vim.cmd("cd " .. vim.fn.fnameescape(root))
 vim.fn["skkeleton#config"], vim.fn["skkeleton#register_keymap"] = original_config, original_keymap
 
 local tools = require("config.development")
+local mason_opts = dofile("lua/plugins/lsp/mason-nvim.lua")[2].opts()
+assert(mason_opts.automatic_enable == false)
+assert(#mason_opts.ensure_installed == vim.tbl_count(tools.servers))
 for name in pairs(tools.servers) do
 	assert(vim.lsp.config[name], name)
+	assert(vim.list_contains(mason_opts.ensure_installed, name), "Missing automatic install: " .. name)
 end
 for _, file in ipairs(vim.fn.glob("lua/**/*.lua", false, true)) do
 	assert(loadfile(file), file)
@@ -89,6 +93,24 @@ vim.lsp.buf.code_action, vim.diagnostic.open_float = old_action, old_float
 dofile("lua/user/ui.lua")
 dofile("lua/options.lua")
 assert(vim.wo.cursorline)
+assert(vim.diagnostic.config().virtual_lines.current_line)
+assert(vim.diagnostic.config().update_in_insert == false)
+assert(vim.diagnostic.config().severity_sort)
+assert(vim.lsp.config.ts_ls.init_options.locale == "en")
+assert(vim.fn.exists(":LanguageStatus") == 2)
+for _, key in ipairs({ " fd", " cl", " ud", " ci" }) do
+	assert(vim.fn.maparg(key, "n") ~= "", "Missing diagnostic mapping: " .. key)
+end
+-- Ensure a missing executable is visible instead of silently looking configured.
+local saved_notify, saved_executable = vim.notify, tools.executable
+local status_message
+vim.notify = function(message) status_message = message end
+tools.executable = function() return nil end
+vim.bo.filetype = "python"
+tools.language_status()
+assert(status_message:find("pyright: missing", 1, true))
+assert(status_message:find("ruff: missing", 1, true))
+vim.notify, tools.executable = saved_notify, saved_executable
 assert(#vim.api.nvim_get_autocmds({ event = "CursorHold" }) == 0, "Diagnostics should open explicitly")
 for _, mapping in ipairs(dofile("lua/plugins/edit/hop.lua").keys) do
 	assert(mapping[1] ~= "t" and mapping[1] ~= "T")

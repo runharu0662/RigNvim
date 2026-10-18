@@ -1,0 +1,70 @@
+-- Supported language tools and parsers. Mason automatically installs these LSP servers.
+local M = {}
+
+M.servers = {
+	pyright = { command = "pyright-langserver", args = { "--stdio" } },
+	ruff = { command = "ruff", args = { "server" } },
+	rust_analyzer = { command = "rust-analyzer" },
+	clangd = { command = "clangd" },
+	gopls = { command = "gopls" },
+	ts_ls = { command = "typescript-language-server", args = { "--stdio" } },
+	eslint = { command = "vscode-eslint-language-server", args = { "--stdio" } },
+	html = { command = "vscode-html-language-server", args = { "--stdio" } },
+	cssls = { command = "vscode-css-language-server", args = { "--stdio" } },
+	jsonls = { command = "vscode-json-language-server", args = { "--stdio" } },
+	yamlls = { command = "yaml-language-server", args = { "--stdio" } },
+	terraformls = { command = "terraform-ls", args = { "serve" } },
+	tflint = { command = "tflint", args = { "--langserver" } },
+	dockerls = { command = "docker-langserver", args = { "--stdio" } },
+	bashls = { command = "bash-language-server", args = { "start" } },
+	lua_ls = { command = "lua-language-server" },
+}
+
+M.formatters = {
+	go = { "goimports", "gofmt" },
+	terraform = { "terraform" },
+	["terraform-vars"] = { "terraform" },
+	javascript = { "prettier" },
+	javascriptreact = { "prettier" },
+	typescript = { "prettier" },
+	typescriptreact = { "prettier" },
+	html = { "prettier" },
+	css = { "prettier" },
+	scss = { "prettier" },
+	json = { "prettier" },
+	jsonc = { "prettier" },
+	yaml = { "prettier" },
+	markdown = { "prettier" },
+	sh = { "shfmt" },
+	lua = { "stylua" },
+}
+
+M.parsers = {
+	"python",
+	"rust",
+	"c",
+	"cpp",
+	"lua",
+	"vim",
+	"vimdoc",
+	"query",
+	"markdown",
+	"markdown_inline",
+	"go",
+	"gomod",
+	"gosum",
+	"gowork",
+	"javascript",
+	"typescript",
+	"tsx",
+	"html",
+	"css",
+	"json",
+	"hcl",
+	"terraform",
+	"yaml",
+	"dockerfile",
+	"bash",
+}
+
+return M

@@ -2,7 +2,12 @@
 local icons = require("user.icons")
 
 vim.diagnostic.config({
-	virtual_text = true,
+	virtual_text = { spacing = 2, source = "if_many" },
+	virtual_lines = { current_line = true },
+	underline = true,
+	severity_sort = true,
+	update_in_insert = false,
+	float = { border = "rounded", source = true, header = "Diagnostics" },
 	signs = {
 		text = {
 			[vim.diagnostic.severity.ERROR] = icons.error_icon,

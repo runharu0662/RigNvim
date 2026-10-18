@@ -82,3 +82,14 @@ end, { desc = "Preview Git diff hunk" })
 vim.keymap.set("n", "<leader>gl", function()
 	require("gitsigns").diffthis()
 end, { desc = "Compare buffer with Git index" })
+
+-- Diagnostics: project list, buffer list, and current-line detail toggle.
+vim.keymap.set("n", "<leader>fd", builtin.diagnostics, { desc = "Find workspace diagnostics" })
+vim.keymap.set("n", "<leader>cl", function()
+	vim.diagnostic.setloclist({ open = true })
+end, { desc = "Buffer diagnostics" })
+vim.keymap.set("n", "<leader>ud", function()
+	local enabled = vim.diagnostic.config().virtual_lines
+	vim.diagnostic.config({ virtual_lines = not enabled and { current_line = true } or false })
+end, { desc = "Toggle diagnostic details" })
+vim.keymap.set("n", "<leader>ci", "<cmd>LanguageStatus<CR>", { desc = "Language server status" })
