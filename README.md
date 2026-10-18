@@ -1,5 +1,7 @@
 # RigNvim
 
+![RigNvimのNeovimスタート画面](docs/images/dashboard.png)
+
 Go・Python・Rust・C/C++・Web・Terraform の開発と、日本語・Markdown の執筆用 Neovim 設定です。
 
 ## 導入
