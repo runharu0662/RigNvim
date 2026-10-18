@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.1
+
+- Install LSP servers explicitly through Mason instead of installing all configured servers on startup.
+- Manage host Go and Node.js/npm through the dotfiles Brewfile for LSP installation and analysis.
+- Keep application execution, builds, and tests in Docker; document host Go caches and version alignment.
+
 ## v0.1.0
 
 - Add Python (Pyright and Ruff), Rust (rust-analyzer), and C/C++ (clangd) support.

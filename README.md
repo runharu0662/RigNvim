@@ -1,5 +1,7 @@
 # RigNvim: Go・Python・Rust・C/C++・Web・Cloud / IaC・日本語執筆用 Neovim
 
+設定バージョン: **v0.1.1**（変更履歴は `CHANGELOG.md`）。
+
 `web` は `simple` の日本語・Markdown 設定を基に、開発機能を追加し、重複する連携とUIを整理した構成です。
 `full` は従来の全部入り構成、`cpp` は競技プログラミング構成です。
 
@@ -27,7 +29,7 @@ build / test / terraform plan・apply / AWS CLI / Docker / kubectl は WezTerm +
 | 設定用 Lua | lua_ls | StyLua、未導入なら対応する LSP |
 
 LSP はプロジェクト内の `node_modules/.bin` → Mason / PATH の実行ファイルを探します。
-ファイルを開くと Mason が対応言語の未導入 LSP を自動インストールします。初回の導入完了後はファイルを開き直してください。
+LSP は必要なものだけ `:Mason` または `:LspInstall` で導入します。起動時・ファイルを開いたときの自動インストールは行いません。導入完了後はファイルを開き直してください。
 LSP の起動はこの構成で管理するため、Mason 側の `automatic_enable` は無効です。
 Prettier はプロジェクトの実行ファイルと設定を優先します。
 ESLint はプロジェクトの ESLint 設定に従って診断・コードアクションを提供し、整形役にはしません。
@@ -41,7 +43,7 @@ Rust は Rust toolchain と rustfmt が必要です。C/C++ はプロジェク�
 
 構文・型・lint の診断は LSP が担当します。Treesitter はハイライト担当で、サーバー未導入では診断は出ません。
 `:LanguageStatus`（`<leader>ci`）で現在の言語に対応するサーバーの `missing` / `installed, not attached` / `attached` を確認できます。
-自動導入の進捗は `:Mason` で確認できます。導入完了後にファイルを開き直してください。失敗時は表示された `:LspInstall` で再試行できます。
+手動導入の進捗は `:Mason` で確認できます。導入完了後にファイルを開き直してください。失敗時は表示された `:LspInstall` で再試行できます。
 LSP 子プロセスには英語のロケールを渡し、TypeScript の locale も `en` を指定しています。各ツールやルール独自のメッセージは翻訳しません。
 
 - エラー・警告を重要度順に表示し、下線とアイコンで強調します。
@@ -55,15 +57,19 @@ LSP 子プロセスには英語のロケールを渡し、TypeScript の locale 
 
 Treesitter は `main` の新 API を使うため、Neovim 0.12 以降と tree-sitter CLI 0.26.1 以降が必要です。macOS では dotfiles の Brewfile から導入します。初回起動時にパーサーを非同期で取得し、完了後にファイルを開き直すとハイライトとインデントが有効になります。
 
-Neovim 0.11 以降の LSP・組み込み snippet API を使います。実行・ビルド環境は Docker 側で管理し、この設定では導入しません。
-ホストで動く LSP の起動・導入依存（Node.js など）は別途必要です。Docker 内の依存や toolchain はホストの LSP から自動では参照されません。
+Neovim の組み込み LSP・snippet API を使います。アプリの実行・ビルド・テスト環境は Docker 側で管理します。
+ホストには解析・ツール導入用の Go と Node.js/npm を dotfiles の Brewfile で導入します。LSP は Mason で管理し、Homebrew や npm のグローバルインストールでは重複導入しません。
+`gopls` は導入時と解析時にホストの `go` を使い、Node 系 LSP は npm で導入し Node.js で動きます。`go version`・`node --version`・`npm --version` で確認してください。
+Docker 内の依存や toolchain はホストの LSP から自動では参照されません。Go はプロジェクトの `go.mod` / `go.work` に従ってホストにもモジュール・ビルドキャッシュを作る場合があります。ホストと Docker の Go バージョンはプロジェクトに合わせて管理してください。Brewfile はバージョン固定ではありません。
 formatter は必要に応じて `:Mason` から導入してください。
 
-LSP は `lua/config/languages.lua` の一覧から自動導入します。手動で再試行する場合は次のコマンドを使えます。
+`lua/config/languages.lua` は対応言語の一覧で、自動導入リストではありません。まず Go 用の LSP だけを導入する場合：
 
 ```vim
-:LspInstall pyright ruff rust_analyzer clangd gopls ts_ls eslint html cssls jsonls yamlls terraformls dockerls bashls lua_ls
+:LspInstall gopls
 ```
+
+ほかの LSP は必要になった時点で `:LspInstall pyright` や `:LspInstall ts_ls` などで追加します。Go・Node.js の導入だけでは Rust などの toolchain は揃いません。
 
 formatter / lint は `:Mason` で `goimports`、`prettier`、`shfmt`、`stylua`、`tflint` を選べます。
 `gofmt` は Go、`terraform` は Terraform CLI の導入で提供されます。
