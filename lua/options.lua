@@ -33,8 +33,10 @@ vim.api.nvim_set_option("scrolloff", 4)
 vim.o.splitright = true
 vim.o.splitbelow = true
 
--- Use the system clipboard
-vim.opt.clipboard = "unnamedplus"
+-- Keep normal yanks/deletes local unless clipboard sharing is requested.
+if require("config.preferences").system_clipboard then
+	vim.opt.clipboard = "unnamedplus"
+end
 
 -- Hide end-of-buffer markers
 vim.opt.fillchars:append({ eob = " " })

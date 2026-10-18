@@ -25,7 +25,7 @@ return {
 			{ "<leader>r", group = "rename" },
 			{ "<leader>c", group = "Code actions / diagnostics" },
 			-- { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find File", mode = "n" },
-			{ "<leader>p", group = "Markdown" },
+			{ "<leader>u", group = "Display / formatting toggles" },
 			{
 				"<leader>b",
 				group = "buffers",

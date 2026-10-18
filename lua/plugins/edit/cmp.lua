@@ -31,7 +31,6 @@ return {
 				["<C-p>"] = map.select_prev_item(),
 				["<C-n>"] = map.select_next_item(),
 				["<CR>"] = map.confirm({ select = false }),
-				["<Tab>"] = map.confirm({ select = true }),
 			}),
 			sources = {
 				{ name = "nvim_lsp", max_item_count = 15, keyword_length = 1 },

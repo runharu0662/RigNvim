@@ -1,5 +1,6 @@
 -- Copilot
 vim.api.nvim_create_user_command("CopilotToggle", function()
+	local was_loaded = package.loaded["copilot.client"] ~= nil
 	require("lazy").load({ plugins = { "copilot.lua" } })
 	local ok, copilot = pcall(require, "copilot.client")
 	if not ok then
@@ -7,7 +8,10 @@ vim.api.nvim_create_user_command("CopilotToggle", function()
 		return
 	end
 
-	if copilot.is_disabled() then
+	if not was_loaded then
+		-- Loading the plugin runs setup and enables it on the first invocation.
+		vim.notify("Copilot: enabled")
+	elseif copilot.is_disabled() then
 		vim.cmd("Copilot enable")
 		vim.notify("Copilot: enabled")
 	else
@@ -68,13 +72,6 @@ end, { desc = "Format with LSP" })
 -- Close buffer
 vim.keymap.set("n", "<leader>bc", "<cmd>bdelete<CR>", { desc = "Close current buffer" })
 
--- Markdown links and images
-vim.keymap.set("n", "<leader>pi", ":PasteClipboardImage<CR>", { desc = "Paste dropped image as Markdown" })
-
-vim.keymap.set("n", "<leader>pc", "<cmd>CreateMdLink<CR>", { desc = "Create markdown file from [[link]]" })
-
-vim.keymap.set("n", "<leader>po", "<cmd>OpenMdLink<CR>", { desc = "Open markdown file from [[link]]" })
-
 -- Git inspection only; builds and operational commands stay in WezTerm / Zsh.
 vim.keymap.set("n", "<leader>gd", function()
 	require("gitsigns").preview_hunk()
@@ -93,3 +90,8 @@ vim.keymap.set("n", "<leader>ud", function()
 	vim.diagnostic.config({ virtual_lines = not enabled and { current_line = true } or false })
 end, { desc = "Toggle diagnostic details" })
 vim.keymap.set("n", "<leader>ci", "<cmd>LanguageStatus<CR>", { desc = "Language server status" })
+
+-- Toggle format-on-save for the current buffer.
+vim.keymap.set("n", "<leader>uf", function()
+	require("config.development").toggle_autoformat()
+end, { desc = "Toggle buffer format on save" })

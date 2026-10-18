@@ -2,3 +2,6 @@
 SKK-JISYO.*
 !dictionaries/SKK-JISYO.L
 skkeleton-user-jisyo*
+
+# Machine-specific preferences.
+lua/config/local.lua

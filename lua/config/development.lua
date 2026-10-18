@@ -73,7 +73,8 @@ function M.setup_lsp()
 			if not client or client.name == "null-ls" then
 				return
 			end
-			for key, fn in pairs({ gd = vim.lsp.buf.definition, gr = vim.lsp.buf.references }) do
+			-- Preserve Neovim's gr-prefixed LSP mappings (grr, grn, gra, ...).
+			for key, fn in pairs({ gd = vim.lsp.buf.definition }) do
 				if vim.fn.maparg(key, "n") == "" then
 					vim.keymap.set(
 						"n",
@@ -160,13 +161,31 @@ function M.format(opts)
 	vim.lsp.buf.format({ bufnr = bufnr, id = chosen.id, async = opts.async or false, timeout_ms = 3000 })
 end
 
+function M.autoformat_enabled(bufnr)
+	local disabled = vim.b[bufnr or 0].disable_autoformat
+	if disabled ~= nil then
+		return not disabled
+	end
+	return require("config.preferences").autoformat
+end
+
+function M.toggle_autoformat()
+	local disabled = M.autoformat_enabled()
+	vim.b.disable_autoformat = disabled
+	vim.notify("Format on save: " .. (disabled and "OFF" or "ON") .. " (current buffer)")
+end
+
 function M.setup_formatting()
 	local group = vim.api.nvim_create_augroup("web_formatting", { clear = true })
 	vim.api.nvim_create_autocmd("BufWritePre", {
 		group = group,
 		callback = function(args)
 			-- Keep article whitespace intact on save; explicit <leader>n still formats Markdown.
-			if vim.bo[args.buf].filetype ~= "markdown" and vim.bo[args.buf].buftype == "" then
+			if
+				M.autoformat_enabled(args.buf)
+				and not vim.tbl_contains({ "markdown", "mdx" }, vim.bo[args.buf].filetype)
+				and vim.bo[args.buf].buftype == ""
+			then
 				M.format({ bufnr = args.buf, quiet = true })
 			end
 		end,

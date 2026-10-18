@@ -8,11 +8,6 @@ return {
 		"williamboman/mason-lspconfig.nvim",
 		event = { "BufReadPre", "BufNewFile" },
 		dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" },
-		opts = function()
-			-- Keep installation in sync with the servers configured by this setup.
-			local servers = vim.tbl_keys(require("config.languages").servers)
-			table.sort(servers)
-			return { ensure_installed = servers, automatic_enable = false }
-		end,
+		opts = { ensure_installed = {}, automatic_enable = false },
 	},
 }

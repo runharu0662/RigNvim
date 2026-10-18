@@ -39,7 +39,6 @@ require("lazy").setup({
 })
 
 require("mappings")
-require("func.functions")
 require("options")
 vim.cmd([[colorscheme tokyonight-night]])
 require("user.ui")

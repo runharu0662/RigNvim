@@ -1,4 +1,4 @@
--- Supported language tools and parsers. Configured LSP servers are installed automatically through Mason.
+-- Supported language tools and parsers. Install language servers explicitly through Mason.
 local M = {}
 
 M.servers = {

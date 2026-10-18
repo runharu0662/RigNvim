@@ -13,7 +13,29 @@ dofile("lua/plugins/lsp/nvim-lspconfig.lua").config()
 dofile("lua/plugins/lsp/none-ls.lua").config()
 require("telescope").setup(dofile("lua/plugins/tools/telescope.lua").opts)
 dofile("lua/mappings.lua")
-dofile("lua/func/functions.lua")
+
+-- First-use Copilot toggle must enable it; later invocations disable and re-enable.
+-- Stub only the external plugin lifecycle, so no AI service or process is started.
+local saved_lazy, saved_copilot = package.loaded.lazy, package.loaded["copilot.client"]
+local copilot_disabled, copilot_loads = false, 0
+package.loaded["copilot.client"] = nil
+package.loaded.lazy = {
+	load = function()
+		copilot_loads = copilot_loads + 1
+		package.loaded["copilot.client"] = { is_disabled = function() return copilot_disabled end }
+	end,
+}
+vim.api.nvim_create_user_command("Copilot", function(args)
+	copilot_disabled = args.args == "disable"
+end, { nargs = 1 })
+vim.cmd("CopilotToggle")
+assert(not copilot_disabled and copilot_loads == 1, "First toggle must leave Copilot enabled")
+vim.cmd("CopilotToggle")
+assert(copilot_disabled, "Second toggle must disable Copilot")
+vim.cmd("CopilotToggle")
+assert(not copilot_disabled, "Third toggle must re-enable Copilot")
+vim.api.nvim_del_user_command("Copilot")
+package.loaded.lazy, package.loaded["copilot.client"] = saved_lazy, saved_copilot
 
 -- Bundled dictionary lookup must work outside the config directory.
 local original_config, original_keymap = vim.fn["skkeleton#config"], vim.fn["skkeleton#register_keymap"]
@@ -36,12 +58,9 @@ vim.cmd("cd " .. vim.fn.fnameescape(root))
 vim.fn["skkeleton#config"], vim.fn["skkeleton#register_keymap"] = original_config, original_keymap
 
 local tools = require("config.development")
-local mason_opts = dofile("lua/plugins/lsp/mason-nvim.lua")[2].opts()
+local mason_opts = dofile("lua/plugins/lsp/mason-nvim.lua")[2].opts
 assert(mason_opts.automatic_enable == false)
-assert(#mason_opts.ensure_installed == vim.tbl_count(tools.servers))
-for name in pairs(tools.servers) do
-	assert(vim.list_contains(mason_opts.ensure_installed, name), "Missing automatic installation: " .. name)
-end
+assert(#mason_opts.ensure_installed == 0, "Language servers must be installed explicitly")
 for name in pairs(tools.servers) do
 	assert(vim.lsp.config[name], name)
 end
@@ -64,7 +83,7 @@ for _, name in ipairs(ts_languages) do
 	assert(parsers[name], "Unknown parser " .. name)
 end
 
-for _, key in ipairs({ " lt", " v", " ca", " rn", " e", " ff", " fg", " fb", " fh", " n", " bc", " pi", " pc", " po" }) do
+for _, key in ipairs({ " lt", " v", " ca", " rn", " e", " ff", " fg", " fb", " fh", " n", " bc", " uf" }) do
 	assert(vim.fn.maparg(key, "n") ~= "", "Missing existing mapping: " .. key)
 end
 -- Native motions and retired terminal mappings must stay available / absent.
@@ -119,7 +138,9 @@ for _, mapping in ipairs(dofile("lua/plugins/edit/hop.lua").keys) do
 end
 
 assert(vim.fn.exists(":RunInput") == 0 and vim.fn.exists(":InsTemp") == 0)
-assert(vim.fn.exists(":CreateMdLink") == 2 and vim.fn.exists(":PasteClipboardImage") == 2)
+for _, name in ipairs({ "CreateMdLink", "OpenMdLink", "PasteClipboardImage", "EditTempFile" }) do
+	assert(vim.fn.exists(":" .. name) == 0, "Retired command: " .. name)
+end
 
 for name in pairs(tools.servers) do
 	vim.lsp.enable(name, false)
@@ -173,6 +194,34 @@ tools.format = function()
 end
 writes[1].callback({ buf = vim.api.nvim_get_current_buf() })
 assert(not called, "Markdown must not be autoformatted")
+vim.bo.filetype = "mdx"
+writes[1].callback({ buf = vim.api.nvim_get_current_buf() })
+assert(not called, "MDX must not be autoformatted")
+vim.bo.filetype = "typescript"
+tools.toggle_autoformat()
+writes[1].callback({ buf = vim.api.nvim_get_current_buf() })
+assert(not called, "Disabled buffer must not be autoformatted")
+local other = vim.api.nvim_create_buf(true, false)
+vim.bo[other].filetype = "typescript"
+writes[1].callback({ buf = other })
+assert(called, "Other buffers should still autoformat")
+called = false
+tools.toggle_autoformat()
+writes[1].callback({ buf = vim.api.nvim_get_current_buf() })
+assert(called, "Re-enabled buffer must autoformat")
+vim.api.nvim_buf_delete(other, { force = true })
+local preferences = require("config.preferences")
+preferences.autoformat = false
+vim.b.disable_autoformat = nil
+called = false
+writes[1].callback({ buf = vim.api.nvim_get_current_buf() })
+assert(not called, "Global default OFF must skip autoformat")
+tools.toggle_autoformat()
+writes[1].callback({ buf = vim.api.nvim_get_current_buf() })
+assert(called, "Buffer toggle must override global default OFF")
+preferences.autoformat = true
+vim.b.disable_autoformat = nil
+
 tools.format = old_helper
 local lock = vim.json.decode(table.concat(vim.fn.readfile("lazy-lock.json"), "\n"))
 assert(lock.skkeleton and lock["denops.vim"] and lock["none-ls.nvim"])

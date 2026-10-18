@@ -5,7 +5,7 @@ local bundled_dictionary = config_root .. "/dictionaries/SKK-JISYO.L"
 return {
 	"vim-skk/skkeleton",
 	cond = function()
-		return vim.fn.executable("deno") == 1
+		return require("config.preferences").japanese_input and vim.fn.executable("deno") == 1
 	end,
 	dependencies = { "vim-denops/denops.vim" },
 	init = function()

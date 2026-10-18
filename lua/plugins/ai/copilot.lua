@@ -2,17 +2,17 @@
 return {
 	"zbirenbaum/copilot.lua",
 	cmd = "Copilot",
-	event = "InsertEnter",
+	event = require("config.preferences").copilot and "InsertEnter" or nil,
 	opts = {
 		suggestion = {
 			enabled = true,
 			auto_trigger = true,
-			hide_during_completion = false,
+			hide_during_completion = true,
 			keymap = {
 				accept = "<C-l>",
-				accept_word = "<C-;>",
-				accept_line = "<C-'>",
-				dismiss = "<C-x>",
+				accept_word = false,
+				accept_line = false,
+				dismiss = false,
 			},
 		},
 		panel = { enabled = false },
