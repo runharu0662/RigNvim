@@ -50,72 +50,33 @@ export NVIM_APPNAME=RigNvim
 3. `:Mason` から必要な言語サーバーだけを導入します。Go は `:LspInstall gopls`、Python は `:LspInstall pyright ruff`、Web 開発は `:LspInstall ts_ls eslint` でも導入できます。完了後にファイルを開き直します。
 4. Copilot を使う場合は `:Copilot auth` で認証し、`:Copilot status` で確認します。以降は `<leader>lt` で起動・切り替えできます。
 
-### 好みに合わせて設定する
+### プリセット・個別設定
 
-#### 標準設定で始める
+既定は `standard`。`author` は Copilot・SKK 日本語入力・スクロール演出・OSクリップボード共有が有効です。対応言語と基本キーマップは共通です。
 
-追加の指定がなければ `standard` で起動します。言語サーバーは必要なものだけ導入し、Copilot は `<leader>lt` で必要なときに起動できます。
-
-#### 作者の設定を使う
-
-作者が普段使う設定も `author` プリセットとして同梱しています。どちらも利用者が選べます。
-
-| 設定 | `standard`（既定） | `author`（作者の設定） |
-|---|---|---|
-| Copilot の自動起動 | 無効 | 有効 |
-| SKK 日本語入力 | 無効 | 有効 |
-| スクロール演出 | 無効 | 有効 |
-| OSとのクリップボード共有 | 無効 | 有効 |
-| カーソル行の診断詳細・保存時整形 | 有効 | 有効 |
-
-まず試す場合は次で起動します。Deno と Copilot の認証は別途必要です。
-
-```sh
-RIGNVIM_PROFILE=author nvim
-```
-
-毎回使うには `lua/config/local.lua` を作成し、次を書いて Neovim を再起動します。このファイルは Git の対象外なので、自分の選択をリポジトリの更新から分けて保存できます。
-
-```lua
-return {
-  profile = "author",
-}
-```
-
-#### 個別に調整する
-
-同じ `lua/config/local.lua` に、変更したい項目だけ追加します。たとえば作者の設定を使いつつ、スクロール演出を止める場合は次のようにします。
-
-```lua
-return {
-  profile = "author",
-  smooth_scroll = false,
-}
-```
-
-指定した項目がプリセットより優先されます。変更後は Neovim を再起動してください。選べる項目と標準設定の値は次のとおりです。
-
-```lua
-return {
-  profile = "standard",
-  copilot = false,           -- true: 挿入モードで自動起動
-  japanese_input = false,    -- true: skkeleton を使う（Deno が必要）
-  smooth_scroll = false,     -- true: スクロールをアニメーション表示
-  system_clipboard = false,  -- true: 通常のヤンク・削除をOSと共有
-  diagnostic_details = true, -- true: カーソル行の下に診断詳細を表示
-  autoformat = true,         -- false: 保存時整形を初期状態で無効にする
-}
-```
-
-一度だけプリセットを切り替えて起動することもできます。環境変数はファイル内の `profile` 指定より優先され、個別に指定した項目は維持されます。
+一時的に切り替えるには次で起動します（日本語入力は Deno、Copilot は認証が必要）。
 
 ```sh
 RIGNVIM_PROFILE=author nvim
 RIGNVIM_PROFILE=standard nvim
 ```
 
-保存時整形は `<leader>uf`、診断詳細は `<leader>ud` でも切り替えられます。
-共有クリップボードを無効にした状態でも、`"+y` / `"+p` でOSとのコピー・貼り付けができます（クリップボードプロバイダーが必要）。
+永続化・個別調整は `lua/config/local.lua`（Git 対象外）に記述して再起動します。変更する項目だけ指定してください。以下は標準値です。
+
+```lua
+return {
+  profile = "standard",      -- "author" で作者の設定
+  copilot = false,           -- Copilot の自動起動
+  japanese_input = false,    -- SKK 日本語入力（Deno が必要）
+  smooth_scroll = false,     -- スクロール演出
+  system_clipboard = false,  -- OSとのクリップボード共有
+  diagnostic_details = true, -- カーソル行の診断詳細
+  autoformat = true,         -- 保存時整形
+}
+```
+
+環境変数は `profile` より、個別指定はプリセットより優先されます。例：`profile = "author", smooth_scroll = false`。
+OSとのコピー・貼り付けは共有が無効でも `"+y` / `"+p` で使えます（クリップボードプロバイダーが必要）。
 
 ### 整形・言語ツールを追加する
 
@@ -128,20 +89,17 @@ Docker 内の依存はホストの LSP から自動では参照されません�
 
 ## 基本の使い方
 
-プロジェクトのディレクトリで `nvim` を起動します。
+プロジェクトのディレクトリで `nvim` を起動します。`<leader>` は Space です。
 
-```sh
-cd /path/to/project
-nvim
-```
+| 操作 | キー |
+|---|---|
+| ファイル検索 / 全文検索 | `<leader>ff` / `<leader>fg` |
+| ファイルツリー | `<leader>e` |
+| 保存 / 手動整形 | `<leader>w` / `<leader>n` |
+| 保存時整形の切り替え | `<leader>uf` |
 
-Space → f → f でファイル検索、Space → f → g で全文検索、Space → e でファイルツリーを開きます。
-保存は Space → w、手動整形は Space → n です。ビルド・テストなどのコマンドはターミナルから実行します。
-
-コードは保存時に利用可能な整形ツールで整形されます。Go は goimports があれば import 整理も行います。
-`<leader>uf`（Space → u → f）で現在のバッファの保存時整形を切り替えられます。初期状態は有効で、切り替えはセッション中のみ保持されます。手動整形は無効化中も使えます。
-Markdown・MDX は保存時の自動整形を行いません。整形したいときに Space → n を使います。
-ESLint の一括修正は `:LspEslintFixAll` またはコードアクションから実行します。
+保存時整形は既定で有効。切り替えはバッファ単位で、セッション中のみ保持されます。Markdown・MDX は手動整形のみです。
+ビルド・テストはターミナルから実行します。
 
 ## 対応言語とツール
 
@@ -164,12 +122,10 @@ ESLint の一括修正は `:LspEslintFixAll` またはコードアクション�
 
 ## インデント
 
-このリポジトリにも `.editorconfig` を配置しています。基本は2スペース、Python・Rustは4スペース、Go・Makefileはタブです。Luaは既存の `.stylua.toml` に合わせてタブ（表示幅4）を指定しています。
+入力時はプロジェクトの `.editorconfig` を優先します。未指定時は Web・Markdown・Terraform/HCL が2スペース、Go・Make はタブ、その他は4スペースです。
+このリポジトリは基本2スペース、Python・Rust は4スペース、Go・Makefile はタブ、Lua はタブ（表示幅4）です。
 
-入力時のインデントはプロジェクトの `.editorconfig` を優先します。指定がない場合は Web 系・Markdown・Terraform/HCL はスペース2つ、Go・Make はタブ、それ以外はスペース4つです。
-`.prettierrc` や `.stylua.toml` だけでは入力時の幅は連動しないため、入力と整形を揃えるには `.editorconfig` にも同じインデント規則を指定してください。変更後はファイルを開き直すと反映されます。
-
-プロジェクトのルート（`package.json` などと同じ場所）に `.editorconfig` を作成します。以下は基本を2スペース、Python・Rustを4スペース、Go・Makefileをタブにする例です。既存の設定がある場合は、そのプロジェクトの規則に合わせてください。
+プロジェクトのルートに `.editorconfig` を置き、整形ツール（`.prettierrc`・`.stylua.toml`）と規則を揃えてください。変更後はファイルを開き直します。
 
 ```ini
 root = true
@@ -178,30 +134,13 @@ root = true
 indent_style = space
 indent_size = 2
 
-[*.py]
+[*.{py,rs}]
 indent_size = 4
 
-[*.rs]
-indent_size = 4
-
-[*.go]
+[{*.go,Makefile}]
 indent_style = tab
 indent_size = tab
 tab_width = 4
-
-[Makefile]
-indent_style = tab
-indent_size = tab
-tab_width = 4
-```
-
-Prettier を使う場合は、`.prettierrc` のインデント設定も揃えます。
-
-```json
-{
-  "tabWidth": 2,
-  "useTabs": false
-}
 ```
 
 ## カスタムキーマップ
@@ -209,21 +148,8 @@ Prettier を使う場合は、`.prettierrc` のインデント設定も揃えま
 `<leader>` は Space、`<C-x>` は Ctrl + x です。たとえば `<leader>ff` は Space → f → f の順に押します。
 以下はこの構成で追加・変更しているキーマップです。モードの指定がないものはノーマルモードで使います。
 
-### プリセットとキーの関係
-
-基本のマッピングは `standard`・`author` で共通です。プリセットは機能の初期状態を変え、キーの配置は変えません。
-
-| 操作 | `standard` | `author` |
-|---|---|---|
-| 検索・ウィンドウ移動・LSP・Git・手動整形 | 下記の共通キーマップ | 同じ |
-| `<leader>lt` | Copilot を起動し、以降は切り替え | 自動起動する Copilot の有効・無効を切り替え |
-| 挿入モードの `<C-l>` | Copilot 起動後、提案全体を採用 | Copilot の提案全体を採用 |
-| 挿入・コマンドラインの `<C-j>` | Neovim 標準の操作 | SKK の切り替え（Deno が必要） |
-| `<leader>uf` / `<leader>ud` | 保存時整形 / 診断詳細を切り替え | 同じ |
-
-`japanese_input` などを個別に設定した場合は、その有効・無効に従います。
-`<C-j>` はノーマルモードでは下のウィンドウへ移動し、SKK 有効時の挿入・コマンドラインモードでは日本語入力を切り替えます。
-標準の `f` / `F` / `t` / `T` と `grr` / `grn` / `gra` を維持し、Tab の補完確定や Copilot による `<C-x>` の上書きは行いません。
+プリセットによるキー配置の違いはありません。`<C-j>` はノーマルモードで下のウィンドウへ移動し、SKK 有効時の挿入・コマンドラインモードで日本語入力を切り替えます。
+標準の `f` / `F` / `t` / `T`・`grr` / `grn` / `gra`・`<C-x>` は維持します。
 
 ### ファイル・ウィンドウ・検索
 
@@ -297,14 +223,11 @@ Copilot の提案は補完メニュー表示中には隠れます。Esc で挿�
 
 ## 日本語入力
 
-Deno を導入し、`lua/config/local.lua` で `profile = "author"` または `japanese_input = true` を設定して Neovim を再起動すると、挿入・コマンドラインモードの `<C-j>` で skkeleton を切り替えられます。
+Deno を導入し、`lua/config/local.lua` で `profile = "author"` または `japanese_input = true` を指定して再起動します。操作キーは上表を参照。SKK 辞書は同梱しています。
 
 ```sh
 brew install deno
 ```
-
-日本語入力を有効にしない場合は、標準の `<C-j>` の操作を維持します。
-変換中は `<C-n>` / `<C-p>` で候補移動、`<C-y>` で確定、`<C-e>` でキャンセルします。SKK 辞書は同梱されています。
 
 別の辞書を使う場合は `init.lua` に指定します。
 
@@ -314,8 +237,7 @@ vim.g.skk_dictionary_path = vim.fn.expand("~/path/to/SKK-JISYO.L")
 
 ## Markdown
 
-Markdown は画面幅で折り返して表示します。表示の折り返しでファイルに改行は挿入されません。
-nvim-cmp は無効です。Copilot を使う場合は `<leader>lt` で起動できます。
+画面幅で折り返して表示します（ファイルへの改行挿入なし）。nvim-cmp は無効、Copilot は `<leader>lt` で起動できます。
 
 ## Inbox
 
@@ -334,7 +256,7 @@ nvim-cmp は無効です。Copilot を使う場合は `<leader>lt` で起動で�
 | アイコンが崩れる | ターミナルのフォントを Nerd Font に設定する |
 | 起動時にエラーが出る | `:messages` と `:checkhealth` を確認する |
 
-診断は `]d` / `[d` で移動し、`<leader>cd` で詳細を表示できます。`<leader>fd` はワークスペース、`<leader>cl` は現在のバッファの診断一覧です。
+診断の移動は `]d` / `[d`。詳細・一覧は上記キーマップを参照してください。
 
 ## 更新
 
